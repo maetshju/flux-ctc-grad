@@ -60,32 +60,31 @@ end
 Calculates the Levenshtein distance between `s` and `t`
 """
 function lev(s, t)
-    m = length(s)
-    n = length(t)
-    d = Array{Int}(zeros(m+1, n+1))
+  m = length(s)
+  n = length(t)
+  d = Array{Int}(zeros(m+1, n+1))
 
+  for i=2:(m+1)
+    @inbounds d[i, 1] = i-1
+  end
+
+  for j=2:(n+1)
+    @inbounds d[1, j] = j-1
+  end
+
+  for j=2:(n+1)
     for i=2:(m+1)
-        @inbounds d[i, 1] = i-1
+      @inbounds if s[i-1] == t[j-1]
+        substitutionCost = 0
+      else
+        substitutionCost = 1
+      end
+      @inbounds d[i, j] = min(d[i-1, j] + 1, # Deletion
+                              d[i, j-1] + 1, # Insertion
+                              d[i-1, j-1] + substitutionCost) # Substitution
     end
-
-    for j=2:(n+1)
-        @inbounds d[1, j] = j-1
-    end
-
-    for j=2:(n+1)
-        for i=2:(m+1)
-            @inbounds if s[i-1] == t[j-1]
-                substitutionCost = 0
-            else
-                substitutionCost = 1
-            end
-            @inbounds d[i, j] = min(d[i-1, j] + 1, # Deletion
-                            d[i, j-1] + 1, # Insertion
-                            d[i-1, j-1] + substitutionCost) # Substitution
-        end
-    end
-
-    @inbounds return d[m+1, n+1]
+  end
+  @inbounds return d[m+1, n+1]
 end
 
 """
