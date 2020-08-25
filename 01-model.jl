@@ -15,7 +15,7 @@ const TRAINDIR = "train"
 const EPOCHS = 300
 const BATCH_SIZE = 1
 
-const N_FILES = 128
+const N_FILES = 10000
 
 losses = []
 
@@ -82,6 +82,13 @@ function lev(s, t)
     @inbounds return d[m+1, n+1]
 end
 
+
+"""
+    collapse(seq)
+
+Collapses `seq` into a version that has symbols collapsed into one repetition and removes all instances
+of the blank symbol.
+"""
 function collapse(seq)
   s = [x for x in seq if x != 62]
   if isempty(s) return s end
@@ -94,6 +101,14 @@ function collapse(seq)
   return s
 end
 
+"""
+    per(x, y)
+
+Compute the phoneme error rate of the model for input `x` and target `y`. The phoneme error rate
+is defined as the Levenshtein distance between the labeling produced by running `x` through
+the model and the target labeling in `y`, all divided by the length of the target labeling
+in `y`
+"""
 function per(x, y)
   Flux.reset!(forward)
   yhat = m(x)
@@ -128,16 +143,16 @@ function main()
   opt = Momentum(1e-4)
   
   for i in 1:EPOCHS
-	  global losses
-	  losses = []
+    global losses
+    losses = []
     println("Beginning epoch $i/$EPOCHS")
     Flux.train!(loss, params((forward, output)), data, opt)
     println("Calculating PER...")
     p = mean(map(x -> per(x...), data))
     println("PER: $(p*100)")
 
-	  println("Mean loss: ", mean(losses))
-	  if p < 0.35 exit() end
+    println("Mean loss: ", mean(losses))
+    if p < 0.35 exit() end
   end
 end
 

@@ -56,6 +56,11 @@ function createData(out_dir)
     rm("extracted_mald", recursive=true)
 end
 
+"""
+    createTextData(from_dir, out_dir)
+
+Reads in BSON data from `from_dir` and writes it out as a tab-delimited file in `out_dir`.
+"""
 function createTextData(from_dir, out_dir)
 
     @showprogress for fname in readdir(from_dir)

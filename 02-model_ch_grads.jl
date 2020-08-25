@@ -11,14 +11,11 @@ Random.seed!(1)
 include("ch_ctc.jl")
 
 const TRAINDIR = "train"
-const TESTDIR = "test"
 
 const EPOCHS = 300
 const BATCH_SIZE = 1
 
 const N_FILES = 400
-
-const ϵ = 1e-8
 
 losses = []
 
@@ -34,7 +31,7 @@ function loss(x, y)
   Flux.reset!(forward)
   yhat = m(x)
   yhat = reduce(hcat, yhat)
-  l = c_ctc(yhat, y')
+  l = c_ctc(yhat, y)
   addToGlobalLoss(l)
   return l
 end
@@ -50,12 +47,18 @@ function readData(dataDir)
     BSON.@load joinpath(dataDir, fname) x y
     x = [Float32.(x[i,:]) for i in 1:size(x,1)]
     push!(Xs, x)
-    push!(Ys, Array(y'))
+    push!(Ys, y)
   end
 
   return (Xs, Ys)
 end
 
+
+"""
+    lev(s, t)
+
+Calculates the Levenshtein distance between `s` and `t`
+"""
 function lev(s, t)
     m = length(s)
     n = length(t)
@@ -85,6 +88,12 @@ function lev(s, t)
     @inbounds return d[m+1, n+1]
 end
 
+"""
+    collapse(seq)
+
+Collapses `seq` into a version that has symbols collapsed into one repetition and removes all instances
+of the blank symbol.
+"""
 function collapse(seq)
   s = [x for x in seq if x != 62]
   if isempty(s) return s end
@@ -97,12 +106,20 @@ function collapse(seq)
   return s
 end
 
+"""
+    per(x, y)
+
+Compute the phoneme error rate of the model for input `x` and target `y`. The phoneme error rate
+is defined as the Levenshtein distance between the labeling produced by running `x` through
+the model and the target labeling in `y`, all divided by the length of the target labeling
+in `y`
+"""
 function per(x, y)
   Flux.reset!(forward)
   yhat = m(x)
   yhat = reduce(hcat, yhat)
   yhat = mapslices(argmax, yhat, dims=1) |> vec |> collapse
-  y = mapslices(argmax, y, dims=2) |> vec |> collapse
+  y = mapslices(argmax, y, dims=1) |> vec |> collapse
   return lev(yhat, y) / length(y)
 end
 
@@ -126,14 +143,14 @@ function main()
   opt = Momentum(1e-4)
   
   for i in 1:EPOCHS
-	  global losses
-	  losses = []
+    global losses
+    losses = []
     println("Beginning epoch $i/$EPOCHS")
     Flux.train!(loss, params((forward, output)), data, opt)
     println("Calculating PER...")
     p = mean(map(x -> per(x...), data))
     println("PER: $(p*100)")
-	  println("Mean loss: ", mean(losses))
+    println("Mean loss: ", mean(losses))
 	  if p < 0.35 exit() end
   end
 end

@@ -109,7 +109,6 @@ function ctc_(ŷ, y)
   end
 
   # Calculate beta coefficients, from the bottom-right, to the upper-left
-  
   β = fill(log(typedZero), T, U′)
 
   # Fill bottom-right corner so bounding errors can be avoided

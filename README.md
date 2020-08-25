@@ -3,7 +3,7 @@
 First, install the appropriate Julia packages:
 
 ```
-julia -e "using Pkg(); Pkg.activate(\".\"); Pkg.instantiate()"
+julia -e "using Pkg; Pkg.activate(\".\"); Pkg.instantiate()"
 ```
 
 To download the data, extract it, and convert it to text form for the Python version:
