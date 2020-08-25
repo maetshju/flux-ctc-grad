@@ -18,7 +18,13 @@ To run the network using the Chainer code for the ctc loss and gradients:
 julia 02-model_ch_grads.jl
 ```
 
-To run the network in the Chainer framework using its ctc loss and gradients:
+To run the network in the Chainer framework using its ctc loss and gradients, first make sure the necessary packages are installed:
+
+```bash
+pip install chainer numpy tqdm textdistance
+```
+
+Then run the network:
 
 ```bash
 python 03-chainer_model.jl
