@@ -66,13 +66,13 @@ def read_data(mydir):
 
     for fname in tqdm(fnames[:(N_FILES)]):
             
-        y = np.loadtxt(os.path.join(mydir, fname + '_labs.txt'), dtype=np.str).T
+        y = np.loadtxt(os.path.join(mydir, fname + '_labs.txt'), dtype='int32').T
     
         y = collapse(y)
-        y = np.array(y)
+        y = np.array(y, dtype='int32')
         y = np.expand_dims(y, 0)
             
-        x = np.loadtxt(os.path.join(mydir, fname + '.txt'), dtype=np.float32)
+        x = np.loadtxt(os.path.join(mydir, fname + '.txt'), dtype='float32')
         x = [chainer.Variable(np.expand_dims(x[i,:], 0)) for i in range(x.shape[0])]
             
         data.append((x, y))
