@@ -1,21 +1,27 @@
 # flux-ctc-grad
 
+First, install the appropriate Julia packages:
+
+```
+julia -e "using Pkg(); Pkg.activate(\".\"); Pkg.instantiate()"
+```
+
 To download the data, extract it, and convert it to text form for the Python version:
 
-```julia
-julia 00-data.jl
+```bash
+julia --project=. 00-data.jl
 ```
 
 To run the network with the Julia code for the ctc loss and gradients:
 
 ```bash
-julia 01-model.jl
+julia --project=. 01-model.jl
 ```
 
 To run the network using the Chainer code for the ctc loss and gradients:
 
 ```bash
-julia 02-model_ch_grads.jl
+julia --project=. 02-model_ch_grads.jl
 ```
 
 To run the network in the Chainer framework using its ctc loss and gradients, first make sure the necessary packages are installed:
@@ -42,7 +48,7 @@ Configuration         | Epochs needed | PER   | Loss
 ----------------------|---------------|-------|--------
 Flux + Julia CTC      | 180           | 34.40 | 5.91
 Flux + Chainer CTC    | 174           | 33.60 | 5.62
-Chainer + Chainer CTC | 45            | 33.63 | 4.92
+Chainer + Chainer CTC | 39            | 33.34 | 5.26
 
 ## References
 
