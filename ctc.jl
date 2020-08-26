@@ -150,7 +150,6 @@ function ctc_(ŷ, y)
     end
   end
 
-  losses = [x for x in losses]
   return losses, grads
 end
 
@@ -180,5 +179,5 @@ end
 
 @adjoint function ctc_(ŷ, y)
   ls, gs = ctc_(ŷ, y)
-  return mean(ls), Δ -> (Δ .* gs, Δ)
+  return mean(ls), Δ -> (Δ .* gs, nothing)
 end
