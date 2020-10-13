@@ -12,7 +12,7 @@ import random
 DATA_DIR = 'train_txt'
 EPOCHS = 300
 
-N_FILES = 400
+N_FILES = 10000
 SHUFFLED_FNAMES_FILES = 'shuffled_names.txt'
 
 random.seed(2)
@@ -115,7 +115,7 @@ for e in range(EPOCHS):
         optimizer.update(lossfun=lambda: loss)
         losses.append(loss.data.tolist())
         
-    p = statistics.mean([per(x, y) for x, y in data])
+    p = statistics.mean([per(x, y) for x, y in data[:500]])
     print('PER:\t{}'.format(p * 100))
     print('Mean loss:\t{}'.format(statistics.mean(losses)))
     if p < 0.35:

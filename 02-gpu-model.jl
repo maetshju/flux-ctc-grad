@@ -3,35 +3,40 @@ using BSON
 using LinearAlgebra
 using Statistics
 using Random
-using Distributions: Uniform
 using Zygote: @adjoint
+using ProgressBars
 
 Random.seed!(1)
 
 include("ctc.jl")
+include("ctc-gpu.jl")
 
 const TRAINDIR = "train"
 
-const EPOCHS = 300
+const EPOCHS = 150
 const BATCH_SIZE = 1
 
-const N_FILES = 400
+const N_FILES = 10000
 
 losses = []
 
-myinit(x) = Float32.(rand(Uniform(-0.1, 0.1), x))
-myinit(x, y) = Float32.(rand(Uniform(-0.1, 0.1), x, y))
+forward = LSTM(39, 100)
+backward = LSTM(39, 100)
+output = Dense(200, 62)
 
-forward = LSTM(39, 200, init=myinit)
-output = Dense(200, 62, initW=myinit)
-
-m(x) = output.(forward.(x))
+function m(x)
+  h0f = collect(map(forward, x))
+  h0b = reverse(map(backward, reverse(x)))
+  h0 = map(i -> vcat(h0f[i], h0b[i]), 1:length(h0f)) |> collect
+  o = collect(map(output, h0))
+  return o
+end
 
 function loss(x, y)
-  Flux.reset!(forward)
+  Flux.reset!((forward, backward))
   yhat = m(x)
   yhat = reduce(hcat, yhat)
-  l = ctc(yhat, y)
+  l = ctc(CuArray(yhat), y)
   addToGlobalLoss(l)
   return l
 end
@@ -54,31 +59,32 @@ function readData(dataDir)
 end
 
 function lev(s, t)
-  m = length(s)
-  n = length(t)
-  d = Array{Int}(zeros(m+1, n+1))
+    m = length(s)
+    n = length(t)
+    d = Array{Int}(zeros(m+1, n+1))
 
-  for i=2:(m+1)
-    @inbounds d[i, 1] = i-1
-  end
-
-  for j=2:(n+1)
-    @inbounds d[1, j] = j-1
-  end
-
-  for j=2:(n+1)
     for i=2:(m+1)
-      @inbounds if s[i-1] == t[j-1]
-        substitutionCost = 0
-      else
-        substitutionCost = 1
-      end
-      @inbounds d[i, j] = min(d[i-1, j] + 1, # Deletion
-                              d[i, j-1] + 1, # Insertion
-                              d[i-1, j-1] + substitutionCost) # Substitution
+        @inbounds d[i, 1] = i-1
     end
-  end
-  @inbounds return d[m+1, n+1]
+
+    for j=2:(n+1)
+        @inbounds d[1, j] = j-1
+    end
+
+    for j=2:(n+1)
+        for i=2:(m+1)
+            @inbounds if s[i-1] == t[j-1]
+                substitutionCost = 0
+            else
+                substitutionCost = 1
+            end
+            @inbounds d[i, j] = min(d[i-1, j] + 1, # Deletion
+                            d[i, j-1] + 1, # Insertion
+                            d[i-1, j-1] + substitutionCost) # Substitution
+        end
+    end
+
+    @inbounds return d[m+1, n+1]
 end
 
 
@@ -109,7 +115,7 @@ the model and the target labeling in `y`, all divided by the length of the targe
 in `y`
 """
 function per(x, y)
-  Flux.reset!(forward)
+  Flux.reset!((forward, backward))
   yhat = m(x)
   yhat = reduce(hcat, yhat)
   yhat = mapslices(argmax, yhat, dims=1) |> vec |> collapse
@@ -138,6 +144,8 @@ function main()
   println("Beginning training")
   
   data = zip(Xs, Ys) |> collect
+  valData = data[1:500]
+  data = data[501:end]
 
   opt = Momentum(1e-4)
   
@@ -145,13 +153,12 @@ function main()
     global losses
     losses = []
     println("Beginning epoch $i/$EPOCHS")
-    Flux.train!(loss, params((forward, output)), data, opt)
+    Flux.train!(loss, params((forward, output)), ProgressBar(data), opt)
     println("Calculating PER...")
-    p = mean(map(x -> per(x...), data))
+    p = mean(map(x -> per(x...), valData))
     println("PER: $(p*100)")
 
     println("Mean loss: ", mean(losses))
-    if p < 0.35 exit() end
   end
 end
 

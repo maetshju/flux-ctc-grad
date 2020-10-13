@@ -12,46 +12,39 @@ To download the data, extract it, and convert it to text form for the Python ver
 julia --project=. 00-data.jl
 ```
 
-To run the network with the Julia code for the ctc loss and gradients:
+To run the network using the CPU implementation of CTC:
 
 ```bash
-julia --project=. 01-model.jl
+julia --project=. 01-cpu-model.jl
 ```
 
-To run the network using the Chainer code for the ctc loss and gradients:
+To run the network with the GPU implementation of CTC:
 
 ```bash
-julia --project=. 02-model_ch_grads.jl
+julia --project=. 02-gpu-model.jl
 ```
 
-To run the network in the Chainer framework using its ctc loss and gradients, first make sure the necessary packages are installed:
+The network is being trained on a subset of the production data from the Massive Auditory Lexical Decision database (Tucker et al., 2019). The subset can be found [here], but the data script will automatically download and decompress the data for you. The subset consists of a random sampling of 10,000 English words taken from the auditory stimuli. This data set was chosen over the TIMIT set because TIMIT is not free of charge, so users may have a hard time replicating these networks if they do not have university or private company affiliation.
 
-```bash
-pip install chainer numpy tqdm textdistance
-```
+The training loss and validation phoneme error rate are visualized below.
 
-Then run the network:
+![Image showing training loss](imgs/cpu_gpu_loss.png)
 
-```bash
-python 03-chainer_model.jl
-```
+![Image showing validation phoneme error rate](imgs/cpu_gpu_per.png)
 
-Both the loss and the phoneme error rate (PER) decrease much faster for the network in Chainer using the CTC loss from Chainer as compared to the networks in Flux, for which the loss and PER decreased more slowly. A network was considered to have converged once the phoneme error rate was below 35%, which is just a bit higher than the reported best PER from Graves et al. (2006) and Graves (2012), which is around 30%. It is likely that further training of the networks could bring the loss closer to or lower than that reported lowest PER, but it does not seem particularly relevant to do here.
+The lowest validation phoneme error rate was achieved after epoch 133 for the network trained with the CPU implementation and after epoch 148 for the network trained with the GPU implementation. These results are presented in the table below.
 
-![Image showing loss comparison](imgs/loss_comparison.png)
+Implementation version	| Epochs neeed	| PER	| Loss
+------------------------|---------------|-------|-------
+CPU						| 133			| 38.63	| 4.97
+GPU						| 148			| 37.84	| 4.82
 
-![Image showing PER comparison](imgs/per_comparison.png)
-
-The number of epochs required for convergence, training PER at convergence, and training loss at convergence are presented in the following table.
-
-Configuration         | Epochs needed | PER   | Loss
-----------------------|---------------|-------|--------
-Flux + Julia CTC      | 180           | 34.40 | 5.91
-Flux + Chainer CTC    | 174           | 33.60 | 5.62
-Chainer + Chainer CTC | 39            | 33.34 | 5.26
+It is difficult to situate these results exactly because this data set has not been put through the intense benchmarking process that the TIMIT data set has been put through. Graves et al. (2006) and Graves (2012) report a phoneme error rate of around 30% on the TIMIT data set with a very similar network architecture. Given that the data set being used for the networks presented here is smaller than TIMIT, the network performance here seems reasonable.
 
 ## References
 
 Graves, A., Fernández, S., Gomez, F., & Schmidhuber, J. (2006, June). Connectionist temporal classification: labelling unsegmented sequence data with recurrent neural networks. In *Proceedings of the 23rd International Conference on Machine learning* (pp. 369-376).
 
 Graves, A. (2012). *Supervised sequence labelling with recurrent neural networks*. Springer.
+
+Tucker, B. V., Brenner, D., Danielson, D. K., Kelley, M. C., Nenadić, F., & Sims, M. (2019). The massive auditory lexical decision (MALD) database. *Behavior research methods, 51*(3), 1187-1204.

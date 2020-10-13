@@ -150,7 +150,7 @@ function ctc_(ŷ, y)
     end
   end
 
-  return losses, grads
+  return mean(losses), grads
 end
 
 """
@@ -174,10 +174,15 @@ or [Graves (2012)](https://www.cs.toronto.edu/~graves/preprint.pdf#chapter.7)
 for mathematical details.
 """
 function ctc(ŷ::Array, y::Array)
-  return ctc_(ŷ, y)[1] |> mean
+  return ctc_(ŷ, y)[1]
 end
 
-@adjoint function ctc_(ŷ, y)
-  ls, gs = ctc_(ŷ, y)
-  return mean(ls), Δ -> (Δ .* gs, nothing)
+@adjoint function ctc(ŷ::Array, y::Array)
+  l,g = ctc_(ŷ, y)
+  return l, Δ -> (Δ .* g, nothing)
 end
+
+# @adjoint function ctc_(ŷ, y)
+#   ls, gs = ctc_(ŷ, y)
+#   return ls, Δ -> (Δ .* gs, nothing)
+# end
