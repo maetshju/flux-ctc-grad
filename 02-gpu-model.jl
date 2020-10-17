@@ -5,6 +5,7 @@ using Statistics
 using Random
 using Zygote: @adjoint
 using ProgressBars
+using CUDA
 
 Random.seed!(1)
 
