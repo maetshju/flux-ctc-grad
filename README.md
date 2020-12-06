@@ -24,7 +24,7 @@ To run the network with the GPU implementation of CTC:
 julia --project=. 02-gpu-model.jl
 ```
 
-The network is being trained on the TIMIT speech corpus, using the configurations and training procedures outlined in Graves's (2012) phoneme recognition CTC network without phoneme label folding (["Phoneme Recognition 1"](https://www.cs.toronto.edu/~graves/preprint.pdf)). The decoding technique was "best path decoding," where the output label sequence is taken as the most probable phoneme class at each time step. This output is then processed to remove the duplicate labels and blank labels before the phoneme error rate (PER) is caclculated.
+The network is being trained on the TIMIT speech corpus, using the configurations and training procedures outlined in Graves's (2012) phoneme recognition CTC network without phoneme label folding (["Phoneme Recognition 1"](https://www.cs.toronto.edu/~graves/preprint.pdf#subsection.7.6.1)). The decoding technique was "best path decoding," where the output label sequence is taken as the most probable phoneme class at each time step. This output is then processed to remove the duplicate labels and blank labels before the phoneme error rate (PER) is caclculated.
 
 The training loss and validation phoneme error rate are visualized below.
 
