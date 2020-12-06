@@ -24,22 +24,23 @@ To run the network with the GPU implementation of CTC:
 julia --project=. 02-gpu-model.jl
 ```
 
-The network is being trained on a subset of the production data from the Massive Auditory Lexical Decision database (Tucker et al., 2019). The subset can be found [here], but the data script will automatically download and decompress the data for you. The subset consists of a random sampling of 10,000 English words taken from the auditory stimuli. This data set was chosen over the TIMIT set because TIMIT is not free of charge, so users may have a hard time replicating these networks if they do not have university or private company affiliation.
+The network is being trained on the TIMIT speech corpus, using the configurations and training procedures outlined in Graves's (2012) phoneme recognition CTC network without phoneme label folding (["Phoneme Recognition 1"](https://www.cs.toronto.edu/~graves/preprint.pdf)). The decoding technique was "best path decoding," where the output label sequence is taken as the most probable phoneme class at each time step. This output is then processed to remove the duplicate labels and blank labels before the phoneme error rate (PER) is caclculated.
 
 The training loss and validation phoneme error rate are visualized below.
 
-![Image showing training loss](imgs/cpu_gpu_loss.png)
+![Image showing training loss](imgs/zygote_cpu_gpu_loss.png)
 
-![Image showing validation phoneme error rate](imgs/cpu_gpu_per.png)
+![Image showing validation phoneme error rate](imgs/zygote_cpu_gpu_per.png)
 
-The lowest validation phoneme error rate was achieved after epoch 133 for the network trained with the CPU implementation and after epoch 148 for the network trained with the GPU implementation. These results are presented in the table below.
+The lowest validation phoneme error rate was achieved after epoch 98 for the network trained with the CPU implementation and after epoch 83 for the network trained with the GPU implementation. These results are presented in the table below.
 
 Implementation version	| Epochs neeed	| PER	| Loss
 ------------------------|---------------|-------|-------
-CPU						| 133			| 38.63	| 4.97
-GPU						| 148			| 37.84	| 4.82
+CPU						| 98			| 31.70	| 35.71
+GPU						| 83			| 31.84	| 37.00
 
-It is difficult to situate these results exactly because this data set has not been put through the intense benchmarking process that the TIMIT data set has been put through. Graves et al. (2006) and Graves (2012) report a phoneme error rate of around 30% on the TIMIT data set with a very similar network architecture. Given that the data set being used for the networks presented here is smaller than TIMIT, the network performance here seems reasonable.
+Graves (2012) reports a mean PER of 31.47 over 5 runs, with a standard error of 0.21. The PER values from from the two networks reported here are reasonably close to those reported values. It is possible that the small remaining discrepancy has to do with the random sample of the validation data. Overall, I expect the implementation of CTC loss function contained here to be sufficiently similar to the original specification.
+
 
 ## References
 

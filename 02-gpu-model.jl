@@ -4,27 +4,35 @@ using LinearAlgebra
 using Statistics
 using Random
 using Zygote: @adjoint
+using Zygote: @nograd
+using Zygote
 using ProgressBars
+using Distributions
 using CUDA
-
-Random.seed!(1)
 
 include("ctc.jl")
 include("ctc-gpu.jl")
 
-const TRAINDIR = "train"
+Random.seed!(1)
 
-const EPOCHS = 150
+const TRAINDIR = "train_no_fold"
+
+const EPOCHS = 100
 const BATCH_SIZE = 1
-
-const N_FILES = 10000
 
 losses = []
 
-forward = LSTM(39, 100)
-backward = LSTM(39, 100)
+# forward = LSTM(39, 128)
+# backward = LSTM(39, 128)
+# output = Dense(256, 62)
+
+forward = LSTM(26, 100)
+backward = LSTM(26, 100)
 output = Dense(200, 62)
 
+const NOISE = Normal(0, 0.6)
+
+# m(x) = output.(forward.(x))
 function m(x)
   h0f = collect(map(forward, x))
   h0b = reverse(map(backward, reverse(x)))
@@ -34,6 +42,7 @@ function m(x)
 end
 
 function loss(x, y)
+  x = addNoise(x)
   Flux.reset!((forward, backward))
   yhat = m(x)
   yhat = reduce(hcat, yhat)
@@ -42,10 +51,25 @@ function loss(x, y)
   return l
 end
 
+@nograd function addNoise(x)
+ 
+  x = deepcopy(x) 
+  n = [rand(NOISE, 26) for i in 1:length(x)]
+  for i in 1:length(x)
+    x[i] .+= n[i]
+  end
+
+  return x
+end
+
+# @adjoint function addNoise(x)
+#  return addNoise(x), () -> nothing
+# end
+
 function readData(dataDir)
-  fnames = open(readlines, "shuffled_names.txt")
-  fnames = [x * ".bson" for x in fnames]
-  fnames = fnames[1:N_FILES]
+  # fnames = open(readlines, "shuffled_names.txt")
+  fnames = readdir(dataDir)
+  shuffle!(MersenneTwister(4), fnames)
   Xs = []
   Ys = []
 
@@ -53,7 +77,13 @@ function readData(dataDir)
     BSON.@load joinpath(dataDir, fname) x y
     x = [Float32.(x[i,:]) for i in 1:size(x,1)]
     push!(Xs, x)
-    push!(Ys, y)
+    push!(Ys, Array(y'))
+  end
+
+  m = mean(reduce(vcat, Xs))
+  st = std(reduce(vcat, Xs))
+  for (i, x) in enumerate(Xs)
+    Xs[i] = [(xI .- m) ./ st for xI in x]
   end
 
   return (Xs, Ys)
@@ -145,21 +175,23 @@ function main()
   println("Beginning training")
   
   data = zip(Xs, Ys) |> collect
-  valData = data[1:500]
-  data = data[501:end]
+  valData = data[1:186]
+  data = data[187:end]
 
   opt = Momentum(1e-4)
-  
+  # opt = ADAM(1e-2)
+
   for i in 1:EPOCHS
     global losses
     losses = []
     println("Beginning epoch $i/$EPOCHS")
-    Flux.train!(loss, params((forward, output)), ProgressBar(data), opt)
+    Flux.train!(loss, Flux.params((forward, backward, output)), ProgressBar(data), opt)
     println("Calculating PER...")
     p = mean(map(x -> per(x...), valData))
     println("PER: $(p*100)")
 
     println("Mean loss: ", mean(losses))
+    # if p < 0.35 exit() end
   end
 end
 
