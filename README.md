@@ -6,7 +6,7 @@ First, install the appropriate Julia packages:
 julia -e "using Pkg; Pkg.activate(\".\"); Pkg.instantiate()"
 ```
 
-To download the data, extract it, and convert it to text form for the Python version:
+It is assumed that you have the TIMIT data downloaded and sitting in a folder named `TIMIT`, as well as pre-created output folders called `train` and `test`. To extract the data, run
 
 ```bash
 julia --project=. 00-data.jl
