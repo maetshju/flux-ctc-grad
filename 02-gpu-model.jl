@@ -15,16 +15,12 @@ include("ctc-gpu.jl")
 
 Random.seed!(1)
 
-const TRAINDIR = "train_no_fold"
+const TRAINDIR = "train"
 
 const EPOCHS = 100
 const BATCH_SIZE = 1
 
 losses = []
-
-# forward = LSTM(39, 128)
-# backward = LSTM(39, 128)
-# output = Dense(256, 62)
 
 forward = LSTM(26, 100)
 backward = LSTM(26, 100)
@@ -32,7 +28,6 @@ output = Dense(200, 62)
 
 const NOISE = Normal(0, 0.6)
 
-# m(x) = output.(forward.(x))
 function m(x)
   h0f = collect(map(forward, x))
   h0b = reverse(map(backward, reverse(x)))
