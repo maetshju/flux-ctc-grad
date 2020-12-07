@@ -57,10 +57,6 @@ end
   return x
 end
 
-# @adjoint function addNoise(x)
-#  return addNoise(x), () -> nothing
-# end
-
 function readData(dataDir)
   # fnames = open(readlines, "shuffled_names.txt")
   fnames = readdir(dataDir)
@@ -174,7 +170,6 @@ function main()
   data = data[187:end]
 
   opt = Momentum(1e-4)
-  # opt = ADAM(1e-2)
 
   for i in 1:EPOCHS
     global losses
@@ -186,7 +181,6 @@ function main()
     println("PER: $(p*100)")
 
     println("Mean loss: ", mean(losses))
-    # if p < 0.35 exit() end
   end
 end
 
