@@ -20,17 +20,12 @@ const BATCH_SIZE = 1
 
 losses = []
 
-# forward = LSTM(39, 128)
-# backward = LSTM(39, 128)
-# output = Dense(256, 62)
-
 forward = LSTM(26, 100)
 backward = LSTM(26, 100)
 output = Dense(200, 62)
 
 const NOISE = Normal(0, 0.6)
 
-# m(x) = output.(forward.(x))
 function m(x)
   h0f = collect(map(forward, x))
   h0b = reverse(map(backward, reverse(x)))
@@ -59,10 +54,6 @@ end
 
   return x
 end
-
-# @adjoint function addNoise(x)
-#  return addNoise(x), () -> nothing
-# end
 
 function readData(dataDir)
   # fnames = open(readlines, "shuffled_names.txt")
@@ -177,7 +168,6 @@ function main()
   data = data[187:end]
 
   opt = Momentum(1e-4)
-  # opt = ADAM(1e-2)
 
   for i in 1:EPOCHS
     global losses
@@ -189,7 +179,6 @@ function main()
     println("PER: $(p*100)")
 
     println("Mean loss: ", mean(losses))
-    # if p < 0.35 exit() end
   end
 end
 
