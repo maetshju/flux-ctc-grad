@@ -13,7 +13,7 @@ include("ctc.jl")
 
 Random.seed!(1)
 
-const TRAINDIR = "train_no_fold"
+const TRAINDIR = "train"
 
 const EPOCHS = 100
 const BATCH_SIZE = 1
