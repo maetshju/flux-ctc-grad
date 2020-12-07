@@ -20,32 +20,6 @@ translations = Dict(phone=>i for (i, phone) in enumerate(PHONES))
 translations["sil"] = translations["h#"]
 const PHONE_TRANSLATIONS = translations
 
-# Make dictionary to perform class folding
-const FOLDINGS = Dict(
-    "ao" => "aa",
-    "ax" => "ah",
-    "ax-h" => "ah",
-    "axr" => "er",
-    "hv" => "hh",
-    "ix" => "ih",
-    "el" => "l",
-    "em" => "m",
-    "en" => "n",
-    "nx" => "n",
-    "eng" => "ng",
-    "zh" => "sh",
-    "pcl" => "sil",
-    "tcl" => "sil",
-    "kcl" => "sil",
-    "bcl" => "sil",
-    "dcl" => "sil",
-    "gcl" => "sil",
-    "h#" => "sil",
-    "pau" => "sil",
-    "epi" => "sil",
-    "ux" => "uw"
-)
-
 # The frame length and interval are guesses because the paper does not
 # specify them. Most literature seems to use these values, however.
 FRAME_LENGTH = 0.025 # ms
@@ -160,14 +134,12 @@ function createData(data_dir, out_dir)
 
             x, y = makeFeatures(phn_path, wav_path)
 
-            # Perform label foldings
-            # y = [haskey(FOLDINGS, x) ? FOLDINGS[x] : x for x in y]
+	    # Convert labels to class numbers
             y = [PHONE_TRANSLATIONS[x] for x in y]
 
-            # Generate class nums; there are 61 total classes, but only 39 are
-            # used after folding. However, because we're using connectionist
-            # temporal classification loss, we need an extra class, so we go
-            # up to 62.
+            # Generate class nums; there are 61 total classe. However,
+	    # because we're using connectionist temporal classification
+	    # loss, we need an extra class, so we go up to 62.
             class_nums = [n for n in 1:62]
             y = onehotbatch(y, class_nums)'
 
