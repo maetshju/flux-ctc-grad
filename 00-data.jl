@@ -11,8 +11,8 @@ using MFCC
 const TRAINING_DATA_DIR = "TIMIT/TRAIN"
 const TEST_DATA_DIR = "TIMIT/TEST"
 
-const TRAINING_OUT_DIR = "train_no_fold"
-const TEST_OUT_DIR = "test_no_fold"
+const TRAINING_OUT_DIR = "train"
+const TEST_OUT_DIR = "test"
 
 # Make dictionary to map from phones to class numbers
 const PHONES = split("h#	q	eh	dx	iy	r	ey	ix	tcl	sh	ow	z	s	hh	aw	m	t	er	l	w	aa	hv	ae	dcl	y	axr	d	kcl	k	ux	ng	gcl	g	ao	epi	ih	p	ay	v	n	f	jh	ax	en	oy	dh	pcl	ah	bcl	el	zh	uw	pau	b	uh	th	ax-h	em	ch	nx	eng")
